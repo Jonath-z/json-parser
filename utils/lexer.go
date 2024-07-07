@@ -1,6 +1,9 @@
 package utils
 
-import "regexp"
+import (
+	"fmt"
+	"regexp"
+)
 
 const (
 	LEFT_BRACE    = "LEFT_BRACE"
@@ -22,117 +25,64 @@ type Token struct {
 }
 
 func Lexer(s string) []Token {
+	fmt.Println(s)
 	currentPosition := 0
 	tokens := []Token{}
 
 	for currentPosition < len(s) {
 		character := string(s[currentPosition])
 
-		if character == "{" {
-			tokens = append(tokens, Token{
-				tokenType: LEFT_BRACE,
-				value:     character,
-			})
+		switch character {
+		case "{":
+			tokens = append(tokens, Token{tokenType: LEFT_BRACE, value: character})
 			currentPosition++
-		}
-		if character == "}" {
-			tokens = append(tokens, Token{
-				tokenType: RIGHT_BRACE,
-				value:     character,
-			})
+		case "}":
+			tokens = append(tokens, Token{tokenType: RIGHT_BRACE, value: character})
 			currentPosition++
-		}
-		if character == "[" {
-			tokens = append(tokens, Token{
-				tokenType: LEFT_BRACKET,
-				value:     character,
-			})
+		case "[":
+			tokens = append(tokens, Token{tokenType: LEFT_BRACKET, value: character})
 			currentPosition++
-		}
-		if character == "]" {
-			tokens = append(tokens, Token{
-				tokenType: RIGHT_BRACKET,
-				value:     character,
-			})
+		case "]":
+			tokens = append(tokens, Token{tokenType: RIGHT_BRACKET, value: character})
 			currentPosition++
-		}
-		if character == ":" {
-			tokens = append(tokens, Token{
-				tokenType: COLON,
-				value:     character,
-			})
+		case ":":
+			tokens = append(tokens, Token{tokenType: COLON, value: character})
 			currentPosition++
-		}
-		if character == "," {
-			tokens = append(tokens, Token{
-				tokenType: COMMA,
-				value:     character,
-			})
+		case ",":
+			tokens = append(tokens, Token{tokenType: COMMA, value: character})
 			currentPosition++
-		}
-
-		if character == "\"" {
+		case `"`:
 			stringSequence := ""
-			character = string(s[currentPosition+1])
-			for character != "\"" {
-				stringSequence += character
-				character = string(s[currentPosition+1])
+			currentPosition++
+			for currentPosition < len(s) && string(s[currentPosition]) != `"` {
+				stringSequence += string(s[currentPosition])
+				currentPosition++
 			}
-			character = string(s[currentPosition+1])
-			tokens = append(tokens, Token{
-				tokenType: STRING,
-				value:     stringSequence,
-			})
-			continue
-		}
-
-		emptySpace, _ := regexp.Compile(" ")
-		if emptySpace.Match([]byte(string(s[currentPosition]))) {
-			continue
-		}
-
-		numbers, _ := regexp.Compile("[0-9]")
-		if numbers.Match([]byte(character)) {
-			numberSequence := ""
-			for numbers.Match([]byte(character)) {
-				numberSequence += character
-				character = string(s[currentPosition+1])
+			currentPosition++
+			tokens = append(tokens, Token{tokenType: STRING, value: stringSequence})
+		default:
+			if regexp.MustCompile(`\s`).MatchString(character) {
+				currentPosition++
+			} else if regexp.MustCompile("[0-9]").MatchString(character) {
+				numberSequence := ""
+				for currentPosition < len(s) && regexp.MustCompile("[0-9]").MatchString(string(s[currentPosition])) {
+					numberSequence += string(s[currentPosition])
+					currentPosition++
+				}
+				tokens = append(tokens, Token{tokenType: NUMBER, value: numberSequence})
+			} else if s[currentPosition:currentPosition+4] == "true" {
+				tokens = append(tokens, Token{tokenType: TRUE, value: "true"})
+				currentPosition += 4
+			} else if s[currentPosition:currentPosition+5] == "false" {
+				tokens = append(tokens, Token{tokenType: FALSE, value: "false"})
+				currentPosition += 5
+			} else if s[currentPosition:currentPosition+4] == "null" {
+				tokens = append(tokens, Token{tokenType: NULL, value: "null"})
+				currentPosition += 4
+			} else {
+				panic("Unknown character")
 			}
-			tokens = append(tokens, Token{
-				tokenType: NUMBER,
-				value:     numberSequence,
-			})
-			continue
 		}
-
-		if character == "t" && string(s[currentPosition+1]) == "r" && string(s[currentPosition+2]) == "u" && string(s[currentPosition+3]) == "e" {
-			tokens = append(tokens, Token{
-				tokenType: TRUE,
-				value:     "true",
-			})
-			currentPosition += 4
-			continue
-		}
-
-		if character == "f" && string(s[currentPosition+1]) == "a" && string(s[currentPosition+2]) == "l" && string(s[currentPosition+3]) == "s" && string(s[currentPosition+4]) == "e" {
-			tokens = append(tokens, Token{
-				tokenType: FALSE,
-				value:     "false",
-			})
-			currentPosition += 5
-			continue
-		}
-
-		if character == "n" && string(s[currentPosition+1]) == "u" && string(s[currentPosition+2]) == "l" && string(s[currentPosition+3]) == "l" {
-			tokens = append(tokens, Token{
-				tokenType: NULL,
-				value:     "null",
-			})
-			currentPosition += 4
-			continue
-		}
-
-		panic("Unknown Character: " + character)
 	}
 
 	return tokens

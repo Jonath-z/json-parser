@@ -40,7 +40,7 @@ func TestLeftAndRightBrace(t *testing.T) {
 		},
 	}
 
-	assert.ElementsMatch(t, result, expected, "Should have left and right brance tokens")
+	assert.ElementsMatch(t, result, expected)
 }
 
 func TestFullJsonTokens(t *testing.T) {

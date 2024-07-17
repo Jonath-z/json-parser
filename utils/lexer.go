@@ -1,7 +1,6 @@
 package utils
 
 import (
-	"fmt"
 	"regexp"
 )
 
@@ -25,7 +24,6 @@ type Token struct {
 }
 
 func Lexer(s string) []Token {
-	fmt.Println(s)
 	currentPosition := 0
 	tokens := []Token{}
 
